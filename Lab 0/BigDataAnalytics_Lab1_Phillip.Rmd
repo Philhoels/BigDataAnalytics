@@ -1,0 +1,220 @@
+---
+title: "Lab compendium Lab 1"
+author: "Phillip Hölscher (phiho267)"
+date: "28 3 2019"
+output: 
+  pdf_document:
+    toc: True
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\newpage
+
+
+
+# Lab 1 SQL-Queries and Views
+
+
+## 1) List all employees, i.e. all tuples in the jbemployee relation.
+```{r, eval=FALSE}
+Select *
+from jbemployee;
+```
+
+
+```{r, echo=FALSE}
+knitr::include_graphics("q1.png")
+```
+
+
+##2) List the name of all departments in alphabetical order. Note: by "name"" we mean the name attribute for all tuples in the jbdept relation.
+```{r, eval = FALSE}
+select name
+from jbdept
+order by name;
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q2.png")
+```
+
+##3) What parts are not in store, i.e. qoh = 0? (qoh = Quantity On Hand)
+```{r, eval=FALSE}
+select name
+from jbparts
+where qoh =0;
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q3.png")
+```
+
+
+##4) Which employees have a salary between 9000 (included) and 10000 (included)?
+```{r, eval = FALSE}
+select name
+from jbemployee
+where salary >= 9000
+and salary <= 10000;
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q4.png")
+```
+
+
+##5) What was the age of each employee when they started working (startyear)?
+```{r, eval = FALSE}
+select name,  startyear-birthyear as age_started
+from jbemployee;
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q5.png")
+```
+
+
+##6) Which employees have a last name ending with "son"
+```{r, eval = FALSE}
+select name
+from jbemployee
+where name like "%son,%";
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q6.png")
+```
+
+##7) Which items (note items, not parts) have been delivered by a supplier called Fisher-Price? 
+Formulate this query using a subquery in the where-clause.
+
+```{r, eval = FALSE}
+select name
+from jbitem
+where supplier in (select id
+from jbsupplier
+where name = "Fisher-Price");
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q7.png")
+```
+
+
+##8) Formulate the same query as above, but without a subquery.
+```{r, eval = FALSE}
+select jbitem.name as item, jbsupplier.name as supplier
+from jbitem
+join jbsupplier
+on jbitem.supplier = jbsupplier.id
+where jbsupplier.name = "Fisher-Price";
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q8.png")
+```
+
+
+##9) Show all cities that have suppliers located in them. Formulate this query using a subquery in the where-clause.
+```{r, eval = FALSE}
+select name
+from jbcity
+where id in (select city
+            from jbstore);
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q9.png")
+```
+
+##10) What is the name and color of the parts that are heavier than a card reader? 
+Formulate this query using a subquery in the where-clause. 
+(The SQL query must not contain the weight as a constant.)
+```{r, eval = FALSE}
+select name, color
+from jbparts
+where weight > (select weight
+                from jbparts
+                where name = "card reader");
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q10.png")
+```
+
+
+##11) Formulate the same query as above, but without a subquery. 
+(The query must not contain the weight as a constant.)
+```{r, eval = FALSE}
+select *
+from jbparts
+order by weight DESC
+limit 4;
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q11.png")
+```
+
+
+##12) What is the average weight of black parts?
+```{r, eval = FALSE}
+select avg(weight) as "avg of weight"
+from jbparts
+where color = "black";
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q12.png")
+```
+
+
+##13) What is the total weight of all parts that each supplier in Massachusetts ("Mass"") has delivered? 
+
+Retrieve the name and the total weight for each of these suppliers. 
+Do not forget to take the quantity of delivered parts into account. 
+Note that one row should be returned for each supplier.
+
+```{r, eval = FALSE}
+select jbsupplier.name as supplier,  sum(quan * weight) as weight_totalsum
+from jbsupplier
+join jbcity on jbsupplier.city = jbcity.id
+join jbsupply on jbsupplier.id = jbsupply.supplier
+join jbparts on jbparts.id = jbsupply.part
+where state = "MASS"
+group by jbsupplier.name;
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q13.png")
+```
+
+##14) Create a new relation (a table), with the same attributes as the table items using the CREATE TABLE 
+syntax where you define every attribute explicitly (i.e. not as a copy of another table). 
+Then fill the table with all items that cost less than the average price for items. 
+Remember to define primary and foreign keys in your table!
+
+```{r, eval = FALSE}
+create table item as
+select *
+from jbitem
+where price < (select avg(price)
+                  from jbitem);
+
+ALTER TABLE item
+ADD PRIMARY KEY (id);
+
+ALTER TABLE item
+ADD FOREIGN KEY (supplier) REFERENCES jbitem(supplier);
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q14.1.png")
+```
+
+```{r, echo=FALSE}
+knitr::include_graphics("q14.2.png")
+```
